@@ -1,0 +1,9 @@
+version: '3.8'
+services:
+  zyt-auto-report:
+    shm_size: 1g
+    image: zyt-auto-report
+    container_name: zyt-auto-report
+    volumes:
+      - ~/zyt-auto-report:/root/config
+    command: bash -c "cd /root && python3 Report.py"

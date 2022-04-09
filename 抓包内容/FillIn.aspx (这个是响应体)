@@ -1,0 +1,861 @@
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head id="Head1"><meta http-equiv="Content-Type" content="text/html; charset=utf-8" /><title>
+	健康打卡
+</title><meta name="viewport" content="width=device-width,initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" /><link href="../css/weui.min.css" rel="stylesheet" type="text/css" />
+    <script src="../mui/js/jquery-1.11.1.min.js"></script>
+    <script src="../mui/js/mui.min.js"></script>
+    <!--标准mui.css-->
+    <link type="text/css" href="../mui/css/mui.min.css" rel="stylesheet" /><link type="text/css" href="../mui/css/mui.picker.css" rel="stylesheet" /><link type="text/css" href="../mui/css/mui.poppicker.css" rel="stylesheet" />
+          <script src="/H5/index/js/cookies.js"></script>
+    <!--App自定义的css-->
+    <link href="../mui/css/style.css" rel="stylesheet" />
+    <style type="text/css">
+        .weui-cells {
+            margin-top:0px;
+        }
+        .weui-cells__title {
+            margin-top: .77em;
+            margin-bottom: .3em;
+            padding-left: 15px;
+            padding-right: 15px;
+            color: #333333;
+            font-size: 18px;
+        }
+
+        .mui-input-row label {
+            font-size: 16px;
+            color: #999;
+        }
+
+        .weui-cells::after, .weui-cells::before {
+            content: " ";
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 0px;
+            color: #d9d9d9;
+        }
+
+        .weui-cells::after {
+            bottom: 0;
+            border-bottom: 0px solid #d9d9d9;
+            -webkit-transform-origin: 0 100%;
+            transform-origin: 0 100%;
+            -webkit-transform: scaleY(.5);
+            transform: scaleY(.5);
+        }
+    .weui-cell:before,.weui-cells:before{
+     border-top: 0px solid #d9d9d9;
+    }
+  .weui-cell{
+     border-bottom: 1px solid #d9d9d9;
+    }
+    .weui-cells{
+     border-top: 1px solid #d9d9d9;}
+        .Ent {
+            display:none;
+        }
+    </style>
+    <script type="text/javascript">
+
+        var cj = {
+            getUrlParam: function (key, defvalue) {
+                // 获取url参数
+                var url = window.location.search;
+                // 正则筛选地址栏
+                var reg = new RegExp("(^|&)" + key + "=([^&]*)(&|$)");
+                // 匹配目标参数
+                var result = url.substr(1).match(reg);
+                //返回参数值
+                if (defvalue != "" && typeof (defvalue) != "undefined") {
+                    return result ? decodeURIComponent(result[2]) : defvalue;
+                } else {
+                    return result ? decodeURIComponent(result[2]) : '';
+                }
+            },
+        }
+
+
+        function remind(str) {
+            mui.init({
+                swipeBack: true //启用右滑关闭功能
+            });
+
+            try {
+                var cook = cj.getUrlParam("ENT")
+            } catch (e) {
+                cook = "";
+            }
+
+            if (cook == "turn") {
+                var btnArray = ['Ok'];
+                mui.confirm(str, 'Attention', btnArray, function (e) {
+                    if (e.index == 0) {
+                        $(".Ent").show();
+                        var myDate = new Date;
+                        var year = myDate.getFullYear(); //获取当前年
+                        var mon = myDate.getMonth() + 1; //获取当前月
+                        var date = myDate.getDate(); //获取当前日
+                        console.log(getCookie('TimeDay') + "," + date + "," + getCookie('LastUserCode'))
+                        setCookie('TimeDay', date, 180);
+                        window.location.href = '/H5/ZJSFDX/PunchCardRecord.aspx?ENT=turn&Temperature=新版';
+                    }
+                })
+            } else {
+                var btnArray = ['是'];
+                mui.confirm(str, '提示', btnArray, function (e) {
+                    if (e.index == 0) {
+                        var myDate = new Date;
+                        var year = myDate.getFullYear(); //获取当前年
+                        var mon = myDate.getMonth() + 1; //获取当前月
+                        var date = myDate.getDate(); //获取当前日
+                        console.log(getCookie('TimeDay') + "," + date + "," + getCookie('LastUserCode'))
+                        setCookie('TimeDay', date, 180);
+
+                        window.location.href = '/H5/ZJSFDX/PunchCardRecord.aspx?Temperature=新版';
+                    }
+                })
+            }
+        }
+
+        $(function () {
+            var address = cj.getUrlParam("address");
+            if (address != "") {
+                $("#hidDATA_17").val(address)
+            } else {
+                $("#hidDATA_17").val('无法获取当前地理位置')
+            }
+
+            try {
+                var id = cj.getUrlParam("DailyID")
+            } catch (e) {
+                id = "";
+            }
+            if (id != "") {
+                $("#btn_save").hide();
+                $("#return").show();
+
+                $.ajax({
+                    type: 'POST',
+                    url: 'DataAjax.ashx?Flag=FillInView&DailyID=' + id + '&r=' + Math.floor(Math.random() * 1000),
+                    dataType: 'json',
+                    async: false,
+                    success: function (data) {
+                        if (data.DATA_1 == '体温正常') {
+                            $("input[name='DATA_1'][value='体温正常']").attr("checked", "checked");
+                        } else if (data.DATA_1 == '体温异常') {
+                            $("input[name='DATA_1'][value='体温异常']").attr("checked", "checked");
+                        }
+                        if (data.DATA_2 == '正常') {
+                            $("input[name='DATA_2'][value='正常']").attr("checked", "checked");
+                        } else if (data.DATA_2 == '呼吸道症状') {
+                            $("input[name='DATA_2'][value='呼吸道症状']").attr("checked", "checked");
+                        } else if (data.DATA_2 == '消化道症状') {
+                            $("input[name='DATA_2'][value='消化道症状']").attr("checked", "checked");
+                        } else if (data.DATA_2 == '全身症状') {
+                            $("input[name='DATA_2'][value='全身症状']").attr("checked", "checked");
+                        }
+                        if (data.DATA_3 == '体温正常') {
+                            $("input[name='DATA_3'][value='体温正常']").attr("checked", "checked");
+                        } else if (data.DATA_3 == '体温异常') {
+                            $("input[name='DATA_3'][value='体温异常']").attr("checked", "checked");
+                        }
+                        if (data.DATA_4 == '是') {
+                            $("input[name='DATA_4'][value='是']").attr("checked", "checked");
+                        } else if (data.DATA_4 == '否') {
+                            $("input[name='DATA_4'][value='否']").attr("checked", "checked");
+                        }
+                        if (data.DATA_5 == '绿码') {
+                            $("input[name='DATA_5'][value='绿码']").attr("checked", "checked");
+                        } else if (data.DATA_5 == '黄码') {
+                            $("input[name='DATA_5'][value='黄码']").attr("checked", "checked");
+                        } else if (data.DATA_5 == '橙码') {
+                            $("input[name='DATA_5'][value='橙码']").attr("checked", "checked");
+                        } else if (data.DATA_5 == '红码') {
+                            $("input[name='DATA_5'][value='红码']").attr("checked", "checked");
+                        } else if (data.DATA_5 == '未申领') {
+                            $("input[name='DATA_5'][value='未申领']").attr("checked", "checked");
+                        }
+                        if (data.DATA_6 == '是') {
+                            $("input[name='DATA_6'][value='是']").attr("checked", "checked");
+                        } else if (data.DATA_6 == '否') {
+                            $("input[name='DATA_6'][value='否']").attr("checked", "checked");
+                        }
+                        if (data.DATA_7 == '是') {
+                            $("input[name='DATA_7'][value='是']").attr("checked", "checked");
+                        } else if (data.DATA_7 == '否') {
+                            $("input[name='DATA_7'][value='否']").attr("checked", "checked");
+                        }
+                        if (data.DATA_8 == '是') {
+                            $("input[name='DATA_8'][value='是']").attr("checked", "checked");
+                        } else if (data.DATA_8 == '否') {
+                            $("input[name='DATA_8'][value='否']").attr("checked", "checked");
+                        }
+                        if (data.DATA_9 == '是，已经接种第2针') {
+                            $("input[name='DATA_9'][value='是，已经接种第2针']").attr("checked", "checked");
+                        } else if (data.DATA_9 == '是，已经接种第1针') {
+                            $("input[name='DATA_9'][value='是，已经接种第1针']").attr("checked", "checked");
+                        } else if (data.DATA_9 == '否，打算近期接种') {
+                            $("input[name='DATA_9'][value='否，打算近期接种']").attr("checked", "checked");
+                        } else if (data.DATA_9 == '否，不宜接种') {
+                            $("input[name='DATA_9'][value='否，不宜接种']").attr("checked", "checked");
+                        } else if (data.DATA_9 == '否，不愿接种') {
+                            $("input[name='DATA_9'][value='否，不愿接种']").attr("checked", "checked");
+                        } else if (data.DATA_9 == '是，已经接种加强针') {
+                            $("input[name='DATA_9'][value='是，已经接种加强针']").attr("checked", "checked");
+                        }
+                        if (data.DATA_16 == '是') {
+                            $("input[name='DATA_16'][value='是']").attr("checked", "checked");
+                        } else if (data.DATA_16 == '否') {
+                            $("input[name='DATA_16'][value='否']").attr("checked", "checked");
+                        }
+
+
+                        if (data.DATA_10 == '是') {
+                            $("input[name='DATA_10'][value='是']").attr("checked", "checked");
+                        } else if (data.DATA_10 == '否') {
+                            $("input[name='DATA_10'][value='否']").attr("checked", "checked");
+                        }
+                        $("#DATA_11").val(data.DATA_11);
+                        $("#DATA_12").val(data.DATA_12);
+                        if (data.DATA_13 == '浙江师范大学本部校区') {
+                            $("input[name='DATA_13'][value='浙江师范大学本部校区']").attr("checked", "checked");
+                        } else if (data.DATA_13 == '浙江师范大学杭州校区') {
+                            $("input[name='DATA_13'][value='浙江师范大学杭州校区']").attr("checked", "checked");
+                        } else if (data.DATA_13 == '浙江师范大学兰溪校区') {
+                            $("input[name='DATA_13'][value='浙江师范大学兰溪校区']").attr("checked", "checked");
+                        } else if (data.DATA_13 == '尚未返校') {
+                            $("input[name='DATA_13'][value='尚未返校']").attr("checked", "checked");
+                        }
+                        $("#DATA_14").val(data.DATA_14);
+                        $("input[name='DATA_15'][value='我已知晓并如实填报']").attr("checked", "checked");
+                    }
+                });
+            } else {
+                if ($("#hidDATA_9").val() == '是，已经接种第2针') {
+                    $("input[name='DATA_9'][value='是，已经接种第2针']").attr("checked", "checked");
+                } else if ($("#hidDATA_9").val() == '是，已经接种第1针') {
+                    $("input[name='DATA_9'][value='是，已经接种第1针']").attr("checked", "checked");
+                } else if ($("#hidDATA_9").val() == '否，打算近期接种') {
+                    $("input[name='DATA_9'][value='否，打算近期接种']").attr("checked", "checked");
+                } else if ($("#hidDATA_9").val() == '否，不宜接种') {
+                    $("input[name='DATA_9'][value='否，不宜接种']").attr("checked", "checked");
+                } else if ($("#hidDATA_9").val() == '否，不愿接种') {
+                    $("input[name='DATA_9'][value='否，不愿接种']").attr("checked", "checked");
+                } else if ($("#hidDATA_9").val() == '是，已经接种加强针') {
+                    $("input[name='DATA_9'][value='是，已经接种加强针']").attr("checked", "checked");
+                }
+
+
+                if ($("#hidDATA_16").val() == '是') {
+                    $("input[name='DATA_16'][value='是']").attr("checked", "checked");
+                } else if ($("#hidDATA_16").val() == '否') {
+                    $("input[name='DATA_16'][value='否']").attr("checked", "checked");
+                }
+
+                
+            }
+            $('input[type=radio][name=DATA_13]').bind("change", function () {
+                if ($(this).val() != "尚未返校") {
+                    $("#DATA_14").val('');
+                }
+            });
+
+            //提交
+            $("#btn_save").click(function () {
+                //申请字段验证
+                $("#btn_save").attr("disabled", true);
+
+                $("#hidDATA_1").val($("input[name='DATA_1']:checked").val());
+                $("#hidDATA_2").val($("input[name='DATA_2']:checked").val());
+                $("#hidDATA_3").val($("input[name='DATA_3']:checked").val());
+                $("#hidDATA_4").val($("input[name='DATA_4']:checked").val());
+                $("#hidDATA_5").val($("input[name='DATA_5']:checked").val());
+                $("#hidDATA_6").val($("input[name='DATA_6']:checked").val());
+                $("#hidDATA_7").val($("input[name='DATA_7']:checked").val());
+                $("#hidDATA_8").val($("input[name='DATA_8']:checked").val());
+                $("#hidDATA_9").val($("input[name='DATA_9']:checked").val());
+                $("#hidDATA_10").val($("input[name='DATA_10']:checked").val());
+                $("#hidDATA_11").val($("textarea[name='DATA_11']").val());
+                $("#hidDATA_12").val($("textarea[name='DATA_12']").val());
+                $("#hidDATA_13").val($("input[name='DATA_13']:checked").val());
+                $("#hidDATA_14").val($("#DATA_14").val());
+                $("#hidDATA_15").val($("input[name='DATA_15']:checked").val());
+                $("#hidDATA_16").val($("input[name='DATA_16']:checked").val());
+
+                var DATA_1 = $("input[name='DATA_1']:checked").val()
+                var DATA_2 = $("input[name='DATA_2']:checked").val()
+                var DATA_3 = $("input[name='DATA_3']:checked").val();
+                var DATA_4 = $("input[name='DATA_4']:checked").val();
+                var DATA_5 = $("input[name='DATA_5']:checked").val();
+                var DATA_6 = $("input[name='DATA_6']:checked").val();
+                var DATA_7 = $("input[name='DATA_7']:checked").val();
+                var DATA_8 = $("input[name='DATA_8']:checked").val();
+                var DATA_9 = $("input[name='DATA_9']:checked").val();
+                var DATA_10 = $("input[name='DATA_10']:checked").val();
+                var DATA_11 = $("textarea[name='DATA_11']").val();
+                var DATA_12 = $("textarea[name='DATA_12']").val();
+                var DATA_13 = $("input[name='DATA_13']:checked").val();
+                var DATA_14 = $("#DATA_14").val();
+                var DATA_15 = $("input[name='DATA_15']:checked").val();
+                var DATA_16 = $("input[name='DATA_16']:checked").val();
+
+                if (DATA_5 == '' || typeof (DATA_5) == "undefined") {
+                    var url = window.location.search;
+                    // 正则筛选地址栏
+                    var reg = new RegExp("(^|&)ENT=([^&]*)(&|$)");
+                    // 匹配目标参数
+                    var result = url.substr(1).match(reg);
+                    try {
+                        var cook = decodeURIComponent(result[2])
+                    } catch (e) {
+                        cook = "";
+                    }
+                    if (cook == "turn") {
+                        mui.alert("Please choose 1 questions!");
+                        $(".mui-popup-title").html("Attention");
+                        $(".mui-popup-button-bold").html("Ok");
+                        $("#btn_save").attr("disabled", false);
+
+                    } else {
+                        mui.alert("请选择1题！");
+                        $("#btn_save").attr("disabled", false);
+                    }
+
+                    return false;
+
+                }
+
+                if (DATA_2 != '正常' || DATA_3 == '体温异常' || DATA_4 != '否' || DATA_5 != '绿码' || DATA_6 != '否' || DATA_7 != '否' || DATA_8 != '否' || DATA_10 != '否' || DATA_16 != '否') {
+                    if ($("textarea[name='DATA_11']").val() == '') {
+                        var url = window.location.search;
+                        // 正则筛选地址栏
+                        var reg = new RegExp("(^|&)ENT=([^&]*)(&|$)");
+                        // 匹配目标参数
+                        var result = url.substr(1).match(reg);
+                        try {
+                            var cook = decodeURIComponent(result[2])
+                        } catch (e) {
+                            cook = "";
+                        }
+                        if (cook == "turn") {
+                            mui.alert("Questions 1-11 include “abnormal temperature” or “abnormal”, “non Green Code” and “yes”. Question 12 cannot be blank");
+                            $(".mui-popup-title").html("Attention");
+                            $(".mui-popup-button-bold").html("Ok");
+                            $("#btn_save").attr("disabled", false);
+                        } else {
+                            mui.alert("第1-11题有选择“体温异常”或“非正常”，“非绿码”，“是”选项，第12题不能为空");
+                            $("#btn_save").attr("disabled", false);
+                        }
+                        return false;
+                    }
+                }
+                
+                if (DATA_13 == '' || typeof (DATA_13) == "undefined") {
+                    var url = window.location.search;
+                    // 正则筛选地址栏
+                    var reg = new RegExp("(^|&)ENT=([^&]*)(&|$)");
+                    // 匹配目标参数
+                    var result = url.substr(1).match(reg);
+                    try {
+                        var cook = decodeURIComponent(result[2])
+                    } catch (e) {
+                        cook = "";
+                    }
+                    if (cook == "turn") {
+                        mui.alert("Please choose 2 questions!");
+                        $(".mui-popup-title").html("Attention");
+                        $(".mui-popup-button-bold").html("Ok");
+                        $("#btn_save").attr("disabled", false);
+
+                    } else {
+                        mui.alert("请选择2题！");
+                        $("#btn_save").attr("disabled", false);
+                    }
+
+                    return false;
+
+                }
+                if (DATA_13 == '尚未返校') {
+                    if ($("#DATA_14").val() == '') {
+                        var url = window.location.search;
+                        // 正则筛选地址栏
+                        var reg = new RegExp("(^|&)ENT=([^&]*)(&|$)");
+                        // 匹配目标参数
+                        var result = url.substr(1).match(reg);
+                        try {
+                            var cook = decodeURIComponent(result[2])
+                        } catch (e) {
+                            cook = "";
+                        }
+                        if (cook == "turn") {
+                            mui.alert("If question 2 is “not returned to school”, question 3 cannot be blank");
+                            $(".mui-popup-title").html("Attention");
+                            $(".mui-popup-button-bold").html("Ok");
+                            $("#btn_save").attr("disabled", false);
+                        } else {
+                            mui.alert("若第2题选择的是“尚未返校”,3题不能为空");
+                            $("#btn_save").attr("disabled", false);
+                        }
+                        return false;
+                    }
+                }
+
+                if (DATA_9 == '' || typeof (DATA_9) == "undefined") {
+                    var url = window.location.search;
+                    // 正则筛选地址栏
+                    var reg = new RegExp("(^|&)ENT=([^&]*)(&|$)");
+                    // 匹配目标参数
+                    var result = url.substr(1).match(reg);
+                    try {
+                        var cook = decodeURIComponent(result[2])
+                    } catch (e) {
+                        cook = "";
+                    }
+                    if (cook == "turn") {
+                        mui.alert("Please choose 13 questions!");
+                        $(".mui-popup-title").html("Attention");
+                        $(".mui-popup-button-bold").html("Ok");
+                        $("#btn_save").attr("disabled", false);
+
+                    } else {
+                        mui.alert("请选择13题！");
+                        $("#btn_save").attr("disabled", false);
+                    }
+
+                    return false;
+
+                }
+
+                if (DATA_15 == '' || typeof (DATA_15) == "undefined") {
+                    var url = window.location.search;
+                    // 正则筛选地址栏
+                    var reg = new RegExp("(^|&)ENT=([^&]*)(&|$)");
+                    // 匹配目标参数
+                    var result = url.substr(1).match(reg);
+                    try {
+                        var cook = decodeURIComponent(result[2])
+                    } catch (e) {
+                        cook = "";
+                    }
+                    if (cook == "turn") {
+                        mui.alert("Please tick 15 questions after reading.");
+                        $(".mui-popup-title").html("Attention");
+                        $(".mui-popup-button-bold").html("Ok");
+                        $("#btn_save").attr("disabled", false);
+
+                    } else {
+                        mui.alert("阅读后请勾选15题");
+                        $("#btn_save").attr("disabled", false);
+                    }
+
+                    return false;
+                }
+                return true;
+            })
+        })
+
+    </script>
+</head>
+<body>
+    <form name="form1" method="post" action="./FillIn.aspx?address=%u6d59%u6c5f%u7701%u2730%u91d1%u534e%u5e02%u2730%u5a7a%u57ce%u533a%22)" id="form1">
+<div>
+<input type="hidden" name="__EVENTTARGET" id="__EVENTTARGET" value="" />
+<input type="hidden" name="__EVENTARGUMENT" id="__EVENTARGUMENT" value="" />
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwUINzYyMjY0MDVkZHFsEp6QGeB0SZf3m2ww7ZBcE6NI2/nADTwfdaX3kcnF" />
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+var theForm = document.forms['form1'];
+if (!theForm) {
+    theForm = document.form1;
+}
+function __doPostBack(eventTarget, eventArgument) {
+    if (!theForm.onsubmit || (theForm.onsubmit() != false)) {
+        theForm.__EVENTTARGET.value = eventTarget;
+        theForm.__EVENTARGUMENT.value = eventArgument;
+        theForm.submit();
+    }
+}
+//]]>
+</script>
+
+
+<div>
+
+	<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="3674067D" />
+	<input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="/wEdABmDiPh5NiN/sNOZA+C1WGvLnPdgn5d6iO4LuTjGeN2JM3llOAzR6kycDzMfToHX0QOa6jYEaUq7hqoikcwmGDr/+NNFSi0Taf5OtutYh7ZsYZ5pz8TgUO6tZcvvqH4FHHwTHoOVlUkr7a4y48d8eTzrYdp8PLLcr00Ykm6GIg/QPm2VAoUsguAjookCWDEX54sHQe9Pfyn7J2iyftT+Cg0mL0jfXWdOZUPTgbQHBDwymb6wlsA0YdypgcCl8awhDxBgYuHAmLDqwPtQh9HDEtJjr+c7NEwFf3c5FPeYdSyrXrYIOfZQS7Mh8jWxQ/3S2fHk/wGpGPyEyYtOtvQbZ7eyCWoEiO6Dd+V6RlHl9UDOJYVHlcFqi++psAvZk9q9RG5W1pRfvYYFhXg72yYOmnpySmm9X2U2t6Y11P+J4lVyalm+n0KUg6wbhm42RvKN577lL2zWcbD6zAaEib0znaI8tWsLH8H+NXQUYD4Kkws4BfoJpIr4b0DV7eZFh6tMLUyznw6pK1ioM6RKyI7TbQybM6GxmPMSYX84o4wEmyaB5xD8mMW4pVwMDPFQsiBJWTs=" />
+</div>
+        <div class="weui-cells">
+            <div class="mui-input-row label">
+                <label class="Entfalse" style="width: 100%; color: red">本人承诺：以下所填资料真实准确。如有不实，本人愿承担由此引起的一切后果及法律责任。</label>
+                <label class="Ent" style="width: 100%; color: red">I promise that the information provided below is true and accurate. I hereby declare that I am willing to accept all the consequences and legal responsibilities arising therefrom.</label>
+            </div>
+        </div>
+
+        <div class="weui-cells_form">
+            <div class="weui-cell">
+                <div class="weui-cell__hd">
+                    <label class="weui-label Entfalse" style="font-size: 16px;">报送人姓名:&nbsp;&nbsp; </label>
+                    <label class="weui-label Ent" style="font-size: 16px;">Name:&nbsp;&nbsp; </label>
+                </div>
+                <div class="weui-cell__bd">
+                    <input name="personname" type="text" id="personname" style="border: 0; font-size: 16px;" title="报送人姓名" class="weui-input " readonly="readonly" value="唐俊" />
+
+                </div>
+           </div>
+        </div>
+
+        <div class="weui-cells_form">
+            <div class="weui-cell">
+                <div class="weui-cell__hd">
+                    <label class="weui-label Entfalse" style="font-size: 16px;">报送人工号:&nbsp;&nbsp; </label>
+                    <label class="weui-label Ent" style="font-size: 16px;">Employee ID:&nbsp;&nbsp; </label>
+                </div>
+                <div class="weui-cell__bd">
+                    <input name="personcode" type="text" id="personcode" style="border: 0; font-size: 16px;" title="报送人工号" class="weui-input " readonly="readonly" value="202132110136" />
+                </div>
+            </div>
+        </div>
+
+        <div class="weui-cells_form">
+            <div class="weui-cell">
+                <div class="weui-cell__hd">
+                    <label class="weui-label Entfalse" style="font-size: 16px;">时间:&nbsp;&nbsp; </label>
+                    <label class="weui-label Ent" style="font-size: 16px;">Time:&nbsp;&nbsp; </label>
+                </div>
+                <div class="weui-cell__bd">
+                    <input name="txtCreateTime" type="text" id="txtCreateTime" style="border: 0; font-size: 16px;" title="时间" class="weui-input DisabledFormInput" readonly="readonly" value="2022-04-09" />
+                </div>
+            </div>
+        </div>
+
+
+        
+       <input type="radio" value="空白项" name="DATA_1" id="DATA_1_1" checked="checked" style="display:none;" />
+        
+        <div class="weui-cells__title Entfalse">1.今日，你所申领的学校所在地浙江健康码情况。</div>
+        <div class="weui-cells__title Ent">1.Today, the health code of Zhejiang where the school you applied for is located.</div>
+        <div class="weui-cells">
+            <div class="mui-input-row mui-radio mui-left">
+                <label class="Entfalse">绿码</label>
+                <label class="Ent">Green QR code</label>
+                <input type="radio" value="绿码" name="DATA_5" id="DATA_5_1"/>
+            </div>
+            <div class="mui-input-row mui-radio mui-left">
+                <label class="Entfalse">黄码</label>
+                <label class="Ent">Yellow QR code</label>
+                <input type="radio" value="黄码" name="DATA_5" id="DATA_5_2" />
+            </div>
+            <div class="mui-input-row mui-radio mui-left">
+                <label class="Entfalse">橙码</label>
+                <label class="Ent">Orange QR code</label>
+                <input type="radio" value="橙码" name="DATA_5" id="DATA_5_3" />
+            </div>
+            <div class="mui-input-row mui-radio mui-left">
+				<label class="Entfalse">红码</label>
+                <label class="Ent">Red QR code</label>
+				<input type="radio" value="红码" name="DATA_5" id="DATA_5_4" />
+			</div>
+            <div class="mui-input-row mui-radio mui-left">
+                <label class="Entfalse">未申领</label>
+                <label class="Ent">Without health QR code yet</label>
+                <input type="radio" value="未申领" name="DATA_5" id="DATA_5_5" />
+            </div>
+        </div>
+        <div class="weui-cells__title Entfalse">2.你目前所在的位置是。</div>
+        <div class="weui-cells__title Ent">2.Your current position is.</div>
+        <div class="weui-cells">
+            <div class="mui-input-row mui-radio mui-left">
+                <label class="Entfalse">浙江师范大学本部校区</label>
+                <label class="Ent">Headquarters campus of Zhejiang Normal University</label>
+                <input type="radio" value="浙江师范大学本部校区" name="DATA_13" id="DATA_13_1" />
+            </div>
+            <div class="mui-input-row mui-radio mui-left">
+                <label class="Entfalse">浙江师范大学杭州校区</label>
+                <label class="Ent">Hangzhou campus of Zhejiang Normal University</label>
+                <input type="radio" value="浙江师范大学杭州校区" name="DATA_13" id="DATA_13_2" />
+            </div>
+            <div class="mui-input-row mui-radio mui-left">
+                <label class="Entfalse">浙江师范大学兰溪校区</label>
+                <label class="Ent">Lanxi campus of Zhejiang Normal University</label>
+                <input type="radio" value="浙江师范大学兰溪校区" name="DATA_13" id="DATA_13_3" />
+            </div>
+            <div class="mui-input-row mui-radio mui-left">
+                <label class="Entfalse">尚未返校</label>
+                <label class="Ent">Not back to school</label>
+                <input type="radio" value="尚未返校" name="DATA_13" id="DATA_13_4" />
+            </div>
+        </div>
+        <div class="weui-cells__title Entfalse">3.若第2题选择的是“尚未返校”选项，请选择具体地点位置。</div>
+        <div class="weui-cells__title Ent">3.If you choose the "Not back to school" option for question 2, please choose the specific location.</div>
+        <div class="weui-cell">
+            <div class="weui-cell__bd">
+                 <input name="DATA_14" type="text" id="DATA_14" placeholder="请选择" class="mui-input-clear" style="width: 100%; border: none;font-size: 1em;padding-bottom: 10px;" />
+              </div>
+        </div>
+        <div class="weui-cells__title Entfalse">4.你今日体温状况。</div>
+        <div class="weui-cells__title Ent">4.Your temperature today.</div>
+        <div class="weui-cells">
+            <div class="mui-input-row mui-radio mui-left">
+               <label class="Entfalse">体温正常，36℃≤腋下体温＜37.3℃</label>
+               <label class="Ent">Normal body temperature, 36 ℃ ≤ axillary body temperature < 37.3 ℃</label>
+               <input type="radio" value="体温正常" name="DATA_3" id="DATA_3_1" checked="checked" />
+            </div>
+            <div class="mui-input-row mui-radio mui-left">
+                <label class="Entfalse">体温异常，腋下体温≥37.3℃（请到“体温填报”模块填写具体体温）</label>
+                <label class="Ent">Body temperature is abnormal, axillary body temperature ≥ 37.3 ℃ (please fill in the specific body temperature in the "body temperature filling" module)</label>
+                <input type="radio" value="体温异常" name="DATA_3" id="DATA_3_2" />
+            </div>
+        </div>
+        <div class="weui-cells__title Entfalse">5.你今日健康状况。</div>
+        <div class="weui-cells__title Ent">5.Your health today.</div>
+        <div class="weui-cells">
+            <div class="mui-input-row mui-radio mui-left">
+                <label class="Entfalse">正常</label>
+                <label class="Ent">Normal</label>
+                <input type="radio" value="正常" name="DATA_2" id="DATA_2_1" checked="checked" />
+            </div>
+            <div class="mui-input-row mui-radio mui-left">
+                <label class="Entfalse">呼吸道症状：干咳、乏力、咽痛等</label>
+                <label class="Ent">Respiratory symptoms: dry cough, fatigue, sore throat, etc</label>
+                <input type="radio" value="呼吸道症状" name="DATA_2" id="DATA_2_2" />
+            </div>
+            <div class="mui-input-row mui-radio mui-left">
+                <label class="Entfalse">消化道症状：恶心、呕吐、腹泻等</label>
+                <label class="Ent">Gastrointestinal symptoms: nausea, vomiting, diarrhea, etc</label>
+                <input type="radio" value="消化道症状" name="DATA_2" id="DATA_2_3" />
+            </div>
+            <div class="mui-input-row mui-radio mui-left">
+                <label class="Entfalse">全身症状：乏力、胸闷、食欲不振、全身酸痛等</label>
+                <label class="Ent">General symptoms: fatigue, chest distress, loss of appetite, general pain, etc</label>
+                <input type="radio" value="全身症状" name="DATA_2" id="DATA_4_2_4" />
+            </div>
+        </div>
+        <div class="weui-cells__title Entfalse">6.近14天内，你及共同居住的人员（同学、家人等）是否接触过疫情中高风险地区或涉疫“三区”（封控区、管控区、防范区）人员。</div>
+        <div class="weui-cells__title Ent">6.In the past 14 days, have you and the people living together (classmates, family members, etc.) come into contact with the people in the middle and high risk areas of the epidemic or the "three areas" (sealing and control area, control area and prevention area) involved in the epidemic.</div>
+         <div class="weui-cells">
+            <div class="mui-input-row mui-radio mui-left">
+                <label class="Entfalse">否</label>
+                <label class="Ent">NO</label>
+                <input type="radio" value="否" name="DATA_4" id="DATA_4_1" checked="checked" />
+            </div>
+            <div class="mui-input-row mui-radio mui-left">
+                <label class="Entfalse">是</label>
+                <label class="Ent">YES</label>
+                <input type="radio" value="是" name="DATA_4" id="DATA_4_2" />
+            </div>
+        </div>
+        <div class="weui-cells__title Entfalse">7.近14天，你及共同居住的人员（同学、家人等）是否与确诊的新冠肺炎确诊病例、疑似病例或无症状感染者有密切接触。</div>
+        <div class="weui-cells__title Ent">7.novel coronavirus pneumonia, confirmed cases, suspected cases or asymptomatic infections were closely related to the 14 days of the stay and the co resident (classmates, family members, etc.).</div>
+        <div class="weui-cells">
+            <div class="mui-input-row mui-radio mui-left">
+                <label class="Entfalse">否</label>
+                <label class="Ent">NO</label>
+                <input type="radio" value="否" name="DATA_7" id="DATA_7_1" checked="checked" />
+            </div>
+            <div class="mui-input-row mui-radio mui-left">
+                <label class="Entfalse">是</label>
+                <label class="Ent">YES</label>
+                <input type="radio" value="是" name="DATA_7" id="DATA_7_2" />
+            </div>
+        </div>
+        <div class="weui-cells__title Entfalse">8.近14天，你是否正在或经停疫情中高风险地区、涉疫“三区” （封控区、管控区、防范区）。</div>
+        <div class="weui-cells__title Ent">8.In the past 14 days, have you been in or stopped the "three areas" (sealed control area, control area and prevention area) in the areas with medium and high risk of epidemic situation.</div>
+        <div class="weui-cells">
+            <div class="mui-input-row mui-radio mui-left">
+                <label class="Entfalse">否</label>
+                <label class="Ent">NO</label>
+                <input type="radio" value="否" name="DATA_8" id="DATA_8_1" checked="checked" />
+            </div>
+            <div class="mui-input-row mui-radio mui-left">
+                <label class="Entfalse">是</label>
+                <label class="Ent">YES</label>
+                <input type="radio" value="是" name="DATA_8" id="DATA_8_2" />
+            </div>
+        </div>
+       <div class="weui-cells__title Entfalse">9.近14天，你共同居住的人员（同学、家人等），所申领的健康码是否出现非绿码情况。</div>
+        <div class="weui-cells__title Ent">9.In the past 14 days, whether the health code applied for by the people you live with (classmates, family members, etc.) is non green.</div>
+        <div class="weui-cells">
+            <div class="mui-input-row mui-radio mui-left">
+                <label class="Entfalse">否</label>
+                <label class="Ent">NO</label>
+                <input type="radio" value="否" name="DATA_6" id="DATA_6_1" checked="checked" />
+            </div>
+            <div class="mui-input-row mui-radio mui-left">
+                <label class="Entfalse">是</label>
+                <label class="Ent">YES</label>
+                <input type="radio" value="是" name="DATA_6" id="DATA_6_2" />
+            </div>
+        </div>
+        <div class="weui-cells__title Entfalse">10.过去24小时内，你是否接到校外防疫人员排查电话。</div>
+        <div class="weui-cells__title Ent">10.In the past 24 hours, have you received any investigation calls from epidemic prevention personnel outside the school.</div>
+        <div class="weui-cells">
+            <div class="mui-input-row mui-radio mui-left">
+                <label class="Entfalse">否</label>
+                <label class="Ent">NO</label>
+                <input type="radio" value="否" name="DATA_16" id="DATA_16_1" checked="checked" />
+            </div>
+            <div class="mui-input-row mui-radio mui-left">
+                <label class="Entfalse">是</label>
+                <label class="Ent">YES</label>
+                <input type="radio" value="是" name="DATA_16" id="DATA_16_2" />
+            </div>
+        </div>
+        <div class="weui-cells__title Entfalse">11.你目前是否处于管控阶段（集中隔离医学观察、居家健康观察、日常健康监测）。</div>
+        <div class="weui-cells__title Ent">11.Are you currently in the control stage (centralized isolation medical observation, home health observation, daily health monitoring).</div>
+        <div class="weui-cells">
+            <div class="mui-input-row mui-radio mui-left">
+                <label class="Entfalse">否</label>
+                <label class="Ent">NO</label>
+                <input type="radio" value="否" name="DATA_10" id="DATA_10_1" checked="checked" />
+            </div>
+            <div class="mui-input-row mui-radio mui-left">
+                <label class="Entfalse">是</label>
+                <label class="Ent">YES</label>
+                <input type="radio" value="是" name="DATA_10" id="DATA_10_2" />
+            </div>
+        </div>
+        <div class="weui-cells__title Entfalse">12.若以上问卷有选择“是”选项，请说明具体时间、地点和情况。</div>
+        <div class="weui-cells__title Ent">12.If "yes" is selected in the above questionnaire, please specify the specific time, place and situation.</div>
+        <div class="weui-cell">
+            <div class="weui-cell__bd">
+                 <textarea name="DATA_11" id="DATA_11" class="weui-textarea" placeholder="请填写文字" rows="3" sort_type="1"></textarea>
+             </div>
+        </div>
+        <div class="weui-cells__title Entfalse">13.你是否已接种新冠疫苗。</div>
+        <div class="weui-cells__title Ent">13.Have you received the new crown vaccine.</div>
+        <div class="weui-cells">
+            <div class="mui-input-row mui-radio mui-left">
+                <label class="Entfalse">是，已经接种第2针</label>
+                <label class="Ent">Yes, the second shot has been inoculated</label>
+                <input type="radio" value="是，已经接种第2针" name="DATA_9" id="DATA_9_1" />
+            </div>
+            <div class="mui-input-row mui-radio mui-left">
+                <label class="Entfalse">是，已经接种第1针</label>
+                <label class="Ent">Yes, the first shot has been inoculated</label>
+                <input type="radio" value="是，已经接种第1针" name="DATA_9" id="DATA_9_2" />
+            </div>
+            <div class="mui-input-row mui-radio mui-left">
+                <label class="Entfalse">是，已经接种加强针</label>
+                <label class="Ent">Yes, Booster shots have been inoculated</label>
+                <input type="radio" value="是，已经接种加强针" name="DATA_9" id="DATA_9_6" checked="checked" />
+            </div>
+            <div class="mui-input-row mui-radio mui-left">
+                <label class="Entfalse">尚未接种</label>
+                <label class="Ent">Not vaccinated</label>
+                <input type="radio" value="尚未接种" name="DATA_9" id="DATA_9_3" />
+            </div>
+        </div>
+        <div class="weui-cells__title Entfalse">14.是否有涉及疫情方面的事项需要学校协助。</div>
+        <div class="weui-cells__title Ent">14.Whether there are any issues related to the epidemic situation that need the assistance of the school</div>
+        <div class="weui-cell">
+            <div class="weui-cell__bd">
+                 <textarea name="DATA_12" id="DATA_12" class="weui-textarea" placeholder="请填写文字" rows="3" sort_type="1"></textarea>
+             </div>
+        </div>
+        <div class="weui-cells__title Entfalse">15.为维护校园秩序，保障师生健康安全，根据《刑法》《传染病防治法》等相关法律法规，请你认真阅知以上申报事项，并保证申报内容正确属实。如虚假申报，将承担由此产生的一切后果和法律责任。</div>
+        <div class="weui-cells__title Ent">15.In order to maintain the campus order and ensure the health and safety of teachers and students, according to the criminal law, the law on the prevention and control of infectious diseases and other relevant laws and regulations, please carefully read the above declaration items and ensure that the declaration contents are correct and true. In case of false declaration, it will bear all consequences and legal liabilities arising therefrom.</div>
+        <div class="weui-cells">
+            <div class="mui-input-row mui-radio mui-left">
+                <label class="Entfalse">我已知晓并如实填报</label>
+                <label class="Ent">I know and fill in the form truthfully</label>
+                <input type="radio" value="我已知晓并如实填报" name="DATA_15" id="DATA_15" />
+            </div>
+        </div>
+        
+       
+
+        <div style="width: 100%; margin: 20px auto">
+            <div class="mui-content-padded" style="text-align: center;">
+                <a id="btn_save" class="weui-btn weui-btn_primary" autopostback="false" data-options="iconCls:&#39;icon-save&#39;" href="javascript:__doPostBack(&#39;btn_save&#39;,&#39;&#39;)" style="width: 100%; background-color: #4cb0f9; color: rgb(255, 255, 255);"><span class="Entfalse">上报</span><span class="Ent">Submit</span></a>
+                <button type="button" class="weui-btn weui-btn_primary"   style="width: 100%; background-color: #4cb0f9; color: rgb(255, 255, 255);display:none;"  id="return"><span class="Entfalse">返回</span><span class="Ent">BACK</span></button>
+            </div>
+        </div>
+        <input name="hidDATA_1" type="hidden" id="hidDATA_1" value="空白项" />
+        <input name="hidDATA_2" type="hidden" id="hidDATA_2" value="正常" />
+        <input name="hidDATA_3" type="hidden" id="hidDATA_3" value="体温正常" />
+        <input name="hidDATA_4" type="hidden" id="hidDATA_4" value="否" />
+        <input name="hidDATA_5" type="hidden" id="hidDATA_5" value="绿码" />
+        <input name="hidDATA_6" type="hidden" id="hidDATA_6" value="否" />
+        <input name="hidDATA_7" type="hidden" id="hidDATA_7" value="否" />
+        <input name="hidDATA_8" type="hidden" id="hidDATA_8" value="否" />
+        <input name="hidDATA_9" type="hidden" id="hidDATA_9" value="是，已经接种第2针" />
+        <input name="hidDATA_10" type="hidden" id="hidDATA_10" value="否" />
+        <input name="hidDATA_11" type="hidden" id="hidDATA_11" />
+        <input name="hidDATA_12" type="hidden" id="hidDATA_12" />
+        <input name="hidDATA_13" type="hidden" id="hidDATA_13" value="浙江师范大学本部校区" />
+        <input name="hidDATA_14" type="hidden" id="hidDATA_14" />
+        <input name="hidDATA_15" type="hidden" id="hidDATA_15" value="我已知晓并如实填报" />
+        <input name="hidDATA_16" type="hidden" id="hidDATA_16" value="否" />
+        <input name="hidDATA_17" type="hidden" id="hidDATA_17" value="浙江省✰金华市✰婺城区&quot;)" />
+    
+
+<script type="text/javascript">
+//<![CDATA[
+remind('提交成功！已经返校师生，若腋下体温≥37.3℃，请到“体温填报”模块填写具体体温！');//]]>
+</script>
+</form>
+    <script src="../mui/js/mui.picker.js"></script>
+    <script src="../mui/js/mui.poppicker.js"></script>
+    <script src="../mui/js/city.data-3.js?20200406" type="text/javascript" charset="utf-8"></script>
+    <script type="text/javascript">
+        (function ($, doc) {
+            $.init();
+            $.ready(function () {
+                var cityPicker3 = new $.PopPicker({
+                    layer: 3
+                });
+                cityPicker3.setData(cityData3);
+                var showCityPicker = doc.getElementById('DATA_14');
+                showCityPicker.addEventListener('tap', function (event) {
+                    cityPicker3.show(function (items) {
+                        var addres = (items[0] || {}).text + " " + (items[1] || {}).text + " " + (items[2] || {}).text;
+                        document.getElementById(showCityPicker.id).value = addres;
+
+                    });
+                }, false);
+            });
+        })(mui, document);
+        // 获取url参数
+        var url = window.location.search;
+        // 正则筛选地址栏
+        var reg = new RegExp("(^|&)ENT=([^&]*)(&|$)");
+        // 匹配目标参数
+        var result = url.substr(1).match(reg);
+        try {
+            var cook = decodeURIComponent(result[2])
+        } catch (e) {
+            cook = "";
+        }
+
+        if (cook == "turn") {
+            $(".Ent").show();
+            $(".Entfalse").hide();
+            $("#DATA_11").attr("placeholder", "Please fill in the text")
+            $("#DATA_12").attr("placeholder", "Please fill in the text")
+            $("#DATA_14").attr("placeholder", "Please select")
+            document.title = "Daily Check-in";
+        } else {
+            $(".Ent").hide();
+        }
+
+        $("#return").click(function () {
+            try {
+                var cook = decodeURIComponent(result[2])
+            } catch (e) {
+                cook = "";
+            }
+            if (cook == "turn") {
+                $(".Ent").show();
+                window.location.href = '/H5/ZJSFDX/PunchCardRecord.aspx?ENT=turn';
+            } else {
+                window.location.href = '/H5/ZJSFDX/PunchCardRecord.aspx';
+            }
+        })
+    </script>
+</body>
+</html>
