@@ -4,7 +4,7 @@
 
 方法1 : docker部署
 ```bash
-docker run --shm-size=1g -d smalldecline/zyt-auto-report bash -c "cd /root && python3 Report.py"
+docker run --shm-size=1g -v ~/zyt-auto-report:/root/config -d smalldecline/zyt-auto-report bash -c "cd /root && python3 Report.py"
 ```
 
 用户配置文件在用户目录的zyt-auto-report文件夹里
