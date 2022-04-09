@@ -8,6 +8,16 @@ docker run --shm-size=1g -v ~/zyt-auto-report:/root/config -d smalldecline/zyt-a
 ```
 
 用户配置文件在用户目录的zyt-auto-report文件夹里
+格式如下
+```json
+[
+	{
+		"username": "2021xxxxxxxx",
+		"password": "xxxxxx",
+	},
+	...
+]
+```
 
 方法2 : 自己搭建环境运行
 
